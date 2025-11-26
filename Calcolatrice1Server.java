@@ -1,43 +1,54 @@
+//sono Grassi Thomas
 import java.io.*;
 import java.net.*;
 
-public class GestioneClient implements Runnable {
+public class CalcolatriceServer {
 
-    private Socket client;
+    private static final int PORTA = 8844;
 
-    public GestioneClient(Socket client) {
-        this.client = client;
-    }
+    public static void main(String[] args) {
+        try (ServerSocket serverSocket = new ServerSocket(PORTA)) {
+            System.out.println("Server avviato sulla porta " + PORTA);
 
-    @Override
-    public void run() {
-        try {
-            System.out.println("Client connesso: " + client.getInetAddress());
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Client connesso: " + clientSocket.getRemoteSocketAddress());
 
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(client.getInputStream())
-            );
-            PrintWriter out = new PrintWriter(client.getOutputStream(), true);
+                new Thread(() -> {
+                    try (BufferedReader in = new BufferedReader(
+                                new InputStreamReader(clientSocket.getInputStream()));
+                         PrintWriter out = new PrintWriter(
+                                clientSocket.getOutputStream(), true)) {
 
-            String richiesta;
-            while ((richiesta = in.readLine()) != null) {
-                try {
-                    double risultato = calcola(richiesta);
-                    out.println("Risultato: " + risultato);
-                } catch (Exception e) {
-                    out.println("ERRORE: " + e.getMessage());
-                }
+                        String richiesta;
+                        while ((richiesta = in.readLine()) != null) {
+                            try {
+                                double risultato = calcola(richiesta);
+                                out.println("Risultato: " + risultato);
+                            } catch (Exception e) {
+                                out.println("ERRORE: " + e.getMessage());
+                            }
+                        }
+
+                    } catch (IOException e) {
+                        System.err.println("Errore client: " + e.getMessage());
+                    } finally {
+                        try {
+                            clientSocket.close();
+                        } catch (IOException e) {
+                            System.err.println("Errore chiusura socket: " + e.getMessage());
+                        }
+                    }
+                }).start();
+
             }
 
-            client.close();
-
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Errore server: " + e.getMessage());
         }
     }
-
-    // Stesso metodo del server, copiato senza modifiche
-    private double calcola(String richiesta) throws Exception {
+  
+    private static double calcola(String richiesta) throws Exception {
         String[] parti = richiesta.split(" ");
         if (parti.length != 3) {
             throw new Exception("Formato non valido. Usa: numero operatore numero");
@@ -54,8 +65,7 @@ public class GestioneClient implements Runnable {
             case "/":
                 if (num2 == 0) throw new ArithmeticException("Divisione per zero");
                 return num1 / num2;
-            default:
-                throw new IllegalArgumentException("Operazione non supportata");
+            default: throw new IllegalArgumentException("Operazione non supportata");
         }
     }
 }
