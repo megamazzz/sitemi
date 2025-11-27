@@ -16,13 +16,12 @@ public class CalcolatriceClient {
 
             System.out.println("Connesso al server " + HOST + ":" + PORTA);
 
-            System.out.println("=== CALCOLATRICE REMOTA ===");
-            System.out.println("Formato: NUMERO OPERAZIONE NUMERO");
+            System.out.println("inserisci un numero, l'operazione e l'altro numero");
             System.out.println("Operazioni: + - * /");
-            System.out.println("Scrivi 'quit' per uscire");
+            System.out.println("digita 'quit' per disconnetterti");
 
             while (true) {
-                System.out.print("Calcolo > ");
+                System.out.print("procedimento: ");
                 String input = scanner.nextLine();
 
                 if ("quit".equalsIgnoreCase(input)) break;
